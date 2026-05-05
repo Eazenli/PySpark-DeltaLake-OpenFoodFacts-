@@ -38,8 +38,8 @@ def create_data_dir():
         path.mkdir(parents=True, exist_ok=True)
 
 
-def get_spark():
-    spark = (
+def get_spark() -> SparkSession:
+    builder = (
         SparkSession.builder
         .appName("LakeHouse_OFF")
         .master("local[*]")
