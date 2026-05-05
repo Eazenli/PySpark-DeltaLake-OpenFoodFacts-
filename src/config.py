@@ -42,5 +42,5 @@ def get_spark():
     spark = (
         SparkSession.builder
         .appName("LakeHouse_OFF")
-        .master("local[1]")
+        .master("local[*]")
     )
