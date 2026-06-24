@@ -8,8 +8,8 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
-pyspark = "^4.1.1"
-delta-spark = "^4.2.0"
+pyspark = "^3.5.3"
+delta-spark = "^3.3.0"
 ipykernel = "^7.2.0"
 jupyter = "^1.1.1"
 pyarrow = "^24.0.0"

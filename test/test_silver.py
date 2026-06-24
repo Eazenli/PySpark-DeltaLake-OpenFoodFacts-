@@ -49,7 +49,7 @@ def test_drop_full_null_rows_remove_intermediate_cols(spark):
     assert "BBB" not in codes
 
 
-def test_filter_outlier_nutrition_removes_garbage(spark):
+def test_filter_outlier_nutrition(spark):
     # (Cast_columns runs before this step in the real pipeline to cast nutritional columns into numeric)
     schema = StructType([
         StructField("code", StringType()),

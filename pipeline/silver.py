@@ -48,7 +48,7 @@ class SilverTransformer:
 
     def cast_columns(self, df):
         for col in self.NUTRI_COLS:
-            df = df.withColumn(col, f.col(col).try_cast(DoubleType()))
+            df = df.withColumn(col, f.col(col).cast(DoubleType()))
         df = df.withColumn("last_modified_t", f.col(
             "last_modified_t").cast("long"))
         return df
@@ -72,7 +72,7 @@ class SilverTransformer:
 
         df_full_rows_null = df.withColumn(
             "null_count",
-            sum(f.col(c).isNull().try_cast("int") for c in col_to_check)
+            sum(f.col(c).isNull().cast("int") for c in col_to_check)
         ).withColumn(
             "null_perc",
             f.round(f.col("null_count") / nb_col, 2)
