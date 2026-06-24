@@ -30,7 +30,7 @@ def read_csv(spark):
     )
 
 
-def write_bronze(spark, df) -> int:
+def write_bronze(spark, df, bronze_path=BRONZE_PRODUCTS) -> int:
     # Get timestamp for the ingestion
     df_stamped = df.withColumn("ingest_at_t", f.current_timestamp())
 
@@ -38,16 +38,16 @@ def write_bronze(spark, df) -> int:
     # append only rows where last_modified_t > watermark
 
     # Check if it exists a Delta Table, False write everything, True, do incremental
-    if DeltaTable.isDeltaTable(spark, str(BRONZE_PRODUCTS)):
+    if DeltaTable.isDeltaTable(spark, str(bronze_path)):
         watermark = (
-            spark.read.format("delta").load(str(BRONZE_PRODUCTS))
+            spark.read.format("delta").load(str(bronze_path))
             .agg(f.max(f.col("last_modified_t").cast("long")))
             .collect()[0][0]
         )
         # Filter the new ingested data according to the watermark
         df_new = df_stamped.filter(
             f.col("last_modified_t").cast("long") > watermark)
-        df_new.write.format("delta").mode("append").save(str(BRONZE_PRODUCTS))
+        df_new.write.format("delta").mode("append").save(str(bronze_path))
     else:
         df_stamped.write.format("delta").mode(
-            "overwrite").save(str(BRONZE_PRODUCTS))
+            "overwrite").save(str(bronze_path))
