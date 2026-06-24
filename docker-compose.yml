@@ -5,4 +5,18 @@ services:
       - .:/app
     command: pytest test/ -v
 
-    
+  pipeline:
+    build: .
+    volumes:
+      - .:/app
+    command: python -m pipeline.run
+
+  
+  inspection-notebook:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8888:8888"
+    command: jupyter notebook --ip=0.0.0.0 --no-browser --allow-root --notebook-dir=/app
+

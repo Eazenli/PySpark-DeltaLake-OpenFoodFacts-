@@ -139,5 +139,4 @@ def write_silver(spark, df):
             .execute()
         )
     else:
-        df.write.format("delta").schema(SILVER_SCHEMA).mode(
-            "overwrite").save(str(SILVER_PRODUCTS))
+        df.write.format("delta").mode("overwrite").save(str(SILVER_PRODUCTS))

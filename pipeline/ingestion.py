@@ -1,4 +1,4 @@
-from src.config import OFF_CSV_PATH, OFF_CSV_URL, BRONZE_PRODUCTS
+from src.config import OFF_CSV_PATH, OFF_CSV_URL, BRONZE_PRODUCTS, PARQUET_PATH
 from delta.tables import DeltaTable
 from pathlib import Path
 from pyspark.sql import functions as f
@@ -19,15 +19,20 @@ def download_dump(url: str = OFF_CSV_URL, dir_path: Path = OFF_CSV_PATH) -> Path
 
 
 def read_csv(spark):
-    return spark.read.csv(
-        str(OFF_CSV_PATH),
-        sep="\t",
-        header=True,
-        multiLine=True,
-        quote='"',
-        escape='"',
-        encoding="utf-8"
-    )
+    if PARQUET_PATH.exists():
+        return spark.read.parquet(str(PARQUET_PATH))
+    else:
+        df_raw = spark.read.csv(
+            str(OFF_CSV_PATH),
+            sep="\t",
+            header=True,
+            multiLine=True,
+            quote='"',
+            escape='"',
+            encoding="utf-8"
+        )
+        df_raw.write.parquet(str(PARQUET_PATH), compression="snappy")
+        return spark.read.parquet(str(PARQUET_PATH))
 
 
 def write_bronze(spark, df, bronze_path=BRONZE_PRODUCTS) -> int:

@@ -1,13 +1,14 @@
 from pathlib import Path
 from pyspark.sql import SparkSession  # type: ignore
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, LongType, ArrayType
-from delta import configure_spark_with_delta_pip
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 # Principal documents
 DATA_DIR = PROJECT_ROOT / "data"
 DATA_RAW = DATA_DIR / "raw"
 DATA_SAMPLES = DATA_DIR / "samples"
+# Convert into parquet format after download
+PARQUET_PATH = DATA_RAW / "products.parquet"
 LAKEHOUSE = DATA_DIR / "lakehouse"
 
 # Lakehouse Layer
@@ -62,13 +63,16 @@ def create_data_dir():
 
 
 def get_spark(app_name: str = "LakeHouse_OFF") -> SparkSession:
-    builder = (
+    session = (
         SparkSession.builder
         .appName(app_name)
         .master("local[*]")
-        .config("spark.driver.memory", "2g")
+        .config("spark.driver.memory", "4g")
         .config("spark.sql.shuffle.partitions", "4")
+        .config("spark.python.worker.faulthandler.enabled", "true")
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.3.0")
+        .getOrCreate()
     )
-    return configure_spark_with_delta_pip(builder).getOrCreate()
+    return session
