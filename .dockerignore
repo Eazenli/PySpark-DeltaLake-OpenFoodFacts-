@@ -1,3 +1,9 @@
 .git
 .env
 .gitignore
+
+data/
+*.log
+**/__pycache__/
+*.pyc
+.ipynb_checkpoints/

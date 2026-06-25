@@ -13,3 +13,8 @@ data/
 
 # Notebooks
 .ipynb_checkpoints/
+
+.env
+.pytest_cache/
+spark-warehouse/
+derby.log
