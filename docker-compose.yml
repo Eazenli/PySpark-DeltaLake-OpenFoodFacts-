@@ -3,12 +3,14 @@ services:
     build: .
     volumes:
       - .:/app
+      - ivy-cache:/root/.ivy2
     command: pytest test/ -v
 
   pipeline:
     build: .
     volumes:
       - .:/app
+      - ivy-cache:/root/.ivy2
     command: python -m pipeline.run
 
   
@@ -16,7 +18,11 @@ services:
     build: .
     volumes:
       - .:/app
+      - ivy-cache:/root/.ivy2
     ports:
       - "8888:8888"
     command: jupyter notebook --ip=0.0.0.0 --no-browser --allow-root --notebook-dir=/app
+  
+volumes:
+  ivy-cache:
 

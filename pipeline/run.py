@@ -1,5 +1,5 @@
 from src.config import get_spark, create_data_dir, BRONZE_PRODUCTS
-from pipeline.ingestion import download_dump, read_csv, write_bronze
+from pipeline.ingestion import parquet_needs_rebuild, download_dump, read_csv, write_bronze
 from pipeline.silver import SilverTransformer, write_silver
 
 
@@ -8,9 +8,10 @@ def run():
     spark = get_spark()
 
     # Bronze Layer
+
     download_dump()
-    df_raw = read_csv(spark)
-    write_bronze(spark, df_raw)
+    df_raw_selected = read_csv(spark)
+    write_bronze(spark, df_raw_selected)
 
     # Silver Layer
     df_bronze = spark.read.format("delta").load(str(BRONZE_PRODUCTS))

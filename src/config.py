@@ -1,5 +1,5 @@
 from pathlib import Path
-from pyspark.sql import SparkSession  # type: ignore
+from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, LongType, ArrayType
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -66,10 +66,12 @@ def get_spark(app_name: str = "LakeHouse_OFF") -> SparkSession:
     session = (
         SparkSession.builder
         .appName(app_name)
-        .master("local[*]")
+        .master("local[2]")
         .config("spark.driver.memory", "4g")
         .config("spark.sql.shuffle.partitions", "4")
         .config("spark.python.worker.faulthandler.enabled", "true")
+        # remove delta stat for memory optimization tradeoff
+        .config("spark.databricks.delta.stats.collect", "false")
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
         .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.3.0")

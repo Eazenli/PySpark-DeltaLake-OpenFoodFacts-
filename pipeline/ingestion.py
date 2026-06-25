@@ -3,14 +3,49 @@ from delta.tables import DeltaTable
 from pathlib import Path
 from pyspark.sql import functions as f
 
-import sys
 import urllib.request
 
+COLS_TO_READ = [
+    "code", "last_modified_t", "product_name", "brands",
+    "categories_en", "labels_en", "countries_en", "nutriscore_grade",
+    "ingredients_tags", "food_groups_en", "energy-kcal_100g",
+    "fat_100g", "saturated-fat_100g", "carbohydrates_100g",
+    "sugars_100g", "proteins_100g", "salt_100g"
+]
 
-def download_dump(url: str = OFF_CSV_URL, dir_path: Path = OFF_CSV_PATH) -> Path:
+
+def parquet_needs_rebuild() -> bool:
     """
+    Check if CSV and parquet files exist or not:
+    parquet doesn't exist -> yes, need to create it 
+    CSV doesn't exist -> no (nothing to compare against)
+    if both exist:
+        CSV modified AFTER parquet -> need to rebuild casue it's outdated
+        CSV modified BEFORE parquet -> parquet is up to date 
+    """
+    parquet_exists = PARQUET_PATH.exists()
+    csv_exists = OFF_CSV_PATH.exists()
+
+    if not parquet_exists:
+        return True
+    if not csv_exists:
+        return False
+
+    csv_last_modified = OFF_CSV_PATH.stat().st_mtime
+    parquet_last_modified = PARQUET_PATH.stat().st_mtime
+
+    return csv_last_modified > parquet_last_modified  # CSV is newer -> rebuild
+
+
+def download_dump(url: str = OFF_CSV_URL, dir_path: Path = OFF_CSV_PATH, force=False) -> None:
+    """
+    When force=True and CSV exists, 
+    delete the old CSV path and re-download the new one, compare with parquet's timestamp to rebuild parquet file |
     Download le dump csv OFF if not exists.
     """
+    if force and dir_path.exists():
+        dir_path.unlink()
+
     if not dir_path.exists():
         # Create the data/raw dir
         dir_path.parent.mkdir(parents=True, exist_ok=True)
@@ -19,20 +54,21 @@ def download_dump(url: str = OFF_CSV_URL, dir_path: Path = OFF_CSV_PATH) -> Path
 
 
 def read_csv(spark):
-    if PARQUET_PATH.exists():
+    if not parquet_needs_rebuild():
         return spark.read.parquet(str(PARQUET_PATH))
-    else:
-        df_raw = spark.read.csv(
-            str(OFF_CSV_PATH),
-            sep="\t",
-            header=True,
-            multiLine=True,
-            quote='"',
-            escape='"',
-            encoding="utf-8"
-        )
-        df_raw.write.parquet(str(PARQUET_PATH), compression="snappy")
-        return spark.read.parquet(str(PARQUET_PATH))
+
+    df_raw = spark.read.csv(
+        str(OFF_CSV_PATH),
+        sep="\t",
+        header=True,
+        multiLine=True,
+        quote='"',
+        escape='"',
+        encoding="utf-8"
+    )
+    df_raw.select(COLS_TO_READ).write.mode("overwrite").parquet(
+        str(PARQUET_PATH), compression="snappy")
+    return spark.read.parquet(str(PARQUET_PATH))
 
 
 def write_bronze(spark, df, bronze_path=BRONZE_PRODUCTS) -> int:
