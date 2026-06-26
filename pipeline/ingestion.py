@@ -47,10 +47,15 @@ def download_dump(url: str = OFF_CSV_URL, dir_path: Path = OFF_CSV_PATH, force=F
         dir_path.unlink()
 
     if not dir_path.exists():
-        # Create the data/raw dir
+        # Create a .tmp file to avoid download a corrupt .csv.gz file in data/raw
         dir_path.parent.mkdir(parents=True, exist_ok=True)
-        # Download the csv file only when it doesn't exist
-        urllib.request.urlretrieve(url, dir_path)
+        tmp_path = dir_path.with_suffix(".tmp")
+        try:
+            urllib.request.urlretrieve(url, tmp_path)
+            tmp_path.rename(dir_path)
+        except Exception:
+            tmp_path.unlink(missing_ok=True)
+            raise
 
 
 def read_csv(spark):
@@ -71,7 +76,7 @@ def read_csv(spark):
     return spark.read.parquet(str(PARQUET_PATH))
 
 
-def write_bronze(spark, df, bronze_path=BRONZE_PRODUCTS) -> int:
+def write_bronze(spark, df, bronze_path=BRONZE_PRODUCTS) -> None:
     # Get timestamp for the ingestion
     df_stamped = df.withColumn("ingest_at_t", f.current_timestamp())
 
@@ -85,9 +90,12 @@ def write_bronze(spark, df, bronze_path=BRONZE_PRODUCTS) -> int:
             .agg(f.max(f.col("last_modified_t").cast("long")))
             .collect()[0][0]
         )
-        # Filter the new ingested data according to the watermark
-        df_new = df_stamped.filter(
-            f.col("last_modified_t").cast("long") > watermark)
+        if watermark is None:
+            df_new = df_stamped
+        else:
+            # Filter the new ingested data according to the watermark
+            df_new = df_stamped.filter(
+                f.col("last_modified_t").cast("long") > watermark)
         df_new.write.format("delta").mode("append").save(str(bronze_path))
     else:
         df_stamped.write.format("delta").mode(

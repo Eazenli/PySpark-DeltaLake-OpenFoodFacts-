@@ -80,10 +80,12 @@ class SilverTransformer:
         return df_full_rows_null.filter(f.col("null_perc") < 1).drop("null_count", "null_perc")
 
     def deduplicate_product_codes(self, df):
+        # Drop les rows having NUll in last_modified_t
+        df_with_ts = df.filter(f.col("last_modified_t").isNotNull())
         df_latest = df.groupBy("code").agg(
             f.max("last_modified_t").alias("last_modified_t")
         )
-        return df.join(df_latest, on=["code", "last_modified_t"], how="inner")
+        return df_with_ts.join(df_latest, on=["code", "last_modified_t"], how="inner")
 
     def replace_missing_values(self, df):
         string_cols = [c for c, t in df.dtypes if t == "string"]
@@ -128,6 +130,10 @@ class SilverTransformer:
 
 
 def write_silver(spark, df):
+    df = df.select([
+        f.col(field.name).cast(field.dataType).alias(field.name)
+        for field in SILVER_SCHEMA.fields
+    ])
     if DeltaTable.isDeltaTable(spark, str(SILVER_PRODUCTS)):
         # Use MERGE operation to handle upsert (update + insert).
         silver_delta_table = DeltaTable.forPath(spark, str(SILVER_PRODUCTS))
