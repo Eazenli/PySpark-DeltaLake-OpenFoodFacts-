@@ -82,7 +82,7 @@ class SilverTransformer:
     def deduplicate_product_codes(self, df):
         # Drop les rows having NUll in last_modified_t
         df_with_ts = df.filter(f.col("last_modified_t").isNotNull())
-        df_latest = df.groupBy("code").agg(
+        df_latest = df_with_ts.groupBy("code").agg(
             f.max("last_modified_t").alias("last_modified_t")
         )
         return df_with_ts.join(df_latest, on=["code", "last_modified_t"], how="inner")
