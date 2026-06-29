@@ -7,6 +7,8 @@ services:
     command: pytest test/ -v
 
   pipeline:
+    env_file:
+      - .env
     build: .
     volumes:
       - .:/app
@@ -15,6 +17,8 @@ services:
 
   
   inspection-notebook:
+    env_file:
+      - .env
     build: .
     volumes:
       - .:/app
