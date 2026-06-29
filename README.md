@@ -43,16 +43,16 @@ gold/                  ← aggregated analytical layer
 deduplicates by most recent `last_modified_t`, normalises missing values, parses ingredient tags.
 
 **Gold** — aggragated dataset with some analytical goals:
-![image](images\image_5.png)
+![image](images/image_5.png)
 1. Brands with best average nutritional profile
-![image](images\img_brand_country_nutri_profile_sql.png)
-![image](images\img_brand_country_nutri_profile.png)
+![image](images/img_brand_country_nutri_profile_sql.png)
+![image](images/img_brand_country_nutri_profile.png)
 2. Nutriscore by countries with nomber of products
-![image](images\img_nutriscore_country_sql.png)
-![image](images\img_nutriscore_country.png)
+![image](images/img_nutriscore_country_sql.png)
+![image](images/img_nutriscore_country.png)
 3. Most common ingredients by nutriscore grade
-![image](images\img_nutriscore_ingredient_sql.png)
-![image](images\img_nutriscore_ingredient.png)
+![image](images/img_nutriscore_ingredient_sql.png)
+![image](images/img_nutriscore_ingredient.png)
 
 
 ## Project structure
